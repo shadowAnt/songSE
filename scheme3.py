@@ -26,7 +26,7 @@ unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 r_word = re.compile("(\w[\w']*\w|\w)")
 
 # 字符按位异或  ord返回ASCII码，chr是反过来。^按位异或，join把字符连接起来
-xorWord = lambda ss, cc: ''.join(chr(ord(s) ^ ord(c)) for s, c in zip(ss, cc))
+xorWord = lambda ss, cc: b''.join(str.encode(chr(s^c)) for s, c in zip(ss, cc))
 
 
 def nextWord(fileobj):
@@ -40,27 +40,28 @@ def chunksplit(chunk, length):
     return (chunk[0 + i:length + i] for i in range(0, len(chunk), length))
 
 
-class Counter:
-    def __init__(self, nonce):
-        assert (len(nonce) == 8)
-        self.nonce = nonce
-        self.cnt = 0
-
-    def __call__(self):
-        righthalf = struct.pack('>Q', self.cnt)
-        self.cnt += 1
-        return self.nonce + righthalf
+# class Counter:
+#     def __init__(self, nonce):
+#         assert (len(nonce) == 8)
+#         self.nonce = nonce
+#         self.cnt = 0
+#
+#     def __call__(self):
+#         righthalf = struct.pack('>Q', self.cnt)
+#         self.cnt += 1
+#         return self.nonce + righthalf
+ctr = Counter.new(128, initial_value = int(nonce, 16))
 
 class StreamCipher:
     def __init__(self, key):
         self.skey = key
 
     def generate(self):
-        cipher_ctr = AES.new(self.skey, mode=AES.MODE_CTR, counter=Counter(nonce))
+        cipher_ctr = AES.new(self.skey, mode=AES.MODE_CTR, counter=ctr)
         return cipher_ctr.encrypt(plaintext)
 
     def decrypt(self, enc):
-        cipher_ctr = AES.new(self.skey, mode=AES.MODE_CTR, counter=Counter(nonce))
+        cipher_ctr = AES.new(self.skey, mode=AES.MODE_CTR, counter=ctr)
         return cipher_ctr.decrypt(enc)
 
 
@@ -72,7 +73,7 @@ class AESCipher:
         # raw = pad(raw)
         iv = plaintext
         cipher = AES.new(self.ekey, AES.MODE_CBC, iv)
-        return cipher.encrypt(raw.encode('utf-8'))
+        return cipher.encrypt(raw)
 
     def decrypt(self, enc):
         enc = base64.b64decode(enc)
@@ -92,29 +93,31 @@ def encryptionScheme():
     s_aes_cipher = AESCipher(ENCRYPTION_KEY)
     for filename in os.listdir("./raw/"):
         with open(os.path.join('./raw/', filename), 'rb') as in_file:
-            print
-            filename + ":",
+            print(filename + ":")
             with open(os.path.join('./ciphertext/', filename + '.enc'), 'wb') as out_file:
                 # 处理输入文件的每一个词 str格式
                 for word in nextWord(in_file):
-                    print
-                    word,
+                    # print(word, end=' ')
+                    # print(type(word))
                     my_word = word.ljust(32, '.')
-                    nBits = len(my_word)
-                    EWi = w_aes_cipher.encrypt(my_word)
+                    EWi = w_aes_cipher.encrypt(my_word.encode('utf-8'))
+                    # print(type(EWi))
                     Si = stream_cipher.generate()
                     FiSi = s_aes_cipher.encrypt(Si)
                     Ti = Si + FiSi  # lengh 282
+                    print(Ti)
+                    print(EWi)
+                    # print(type(Ti))
                     ciphertext = xorWord(EWi, Ti)
                     out_file.write(ciphertext)
-        print
+        print()
 
 
 # Search word
 def searchScheme():
     while True:
         try:
-            word2search = raw_input('\nEnter a word to search: ')
+            word2search = input('\nEnter a word to search: ')
             if not word2search:
                 print('Must enter some text to proceed')
                 continue
@@ -123,9 +126,8 @@ def searchScheme():
             w_aes_cipher = AESCipher(ENCRYPTION_KEY)
             s_aes_cipher = AESCipher(ENCRYPTION_KEY)
 
-            cipher2search = w_aes_cipher.encrypt(word2search_padded)
-            print
-            cipher2search
+            cipher2search = w_aes_cipher.encrypt(word2search_padded.encode('utf-8'))
+            print (cipher2search)
             # 遍历每一个加密文件
             for filename in os.listdir('./ciphertext/'):
                 success = 0

@@ -1,10 +1,16 @@
 # song的方案
 
 Practical Techniques for Searches on Encrypted Data这篇文章的代码实现
-使用Python 2.7.
+`scheme.py`使用Python 2.7.
 需要PyCrypto库
 ```
 pip install PyCrypto
+```
+
+`scheme3.py`使用Python 3.6.3
+PyCrypto库只更新到3.4就死了，接替而来的是PyCryptodome库，代码还有bug
+```
+pip install PyCryptodome
 ```
 
 ## Usage

@@ -100,16 +100,20 @@ def encryptionScheme():
             with open(os.path.join('./ciphertext/', filename + '.enc'), 'wb') as out_file:
                 # 处理输入文件的每一个词 str格式
                 for word in nextWord(in_file):
-                    print
-                    word,
+                    print word,
                     my_word = word.ljust(32, '.')
                     nBits = len(my_word)
                     EWi = w_aes_cipher.encrypt(my_word)
                     Si = stream_cipher.generate()
                     FiSi = s_aes_cipher.encrypt(Si)
                     Ti = Si + FiSi  # lengh 282
+                    # print type(Ti)
+                    # print Ti
                     ciphertext = xorWord(EWi, Ti)
+                    # print type(ciphertext)
+                    # print ciphertext
                     out_file.write(ciphertext)
+                    # break
         print
 
 
