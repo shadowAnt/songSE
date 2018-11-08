@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+# coding=UTF-8
 import re
 import os
 import base64
@@ -88,9 +88,11 @@ def encryptionScheme():
     s_aes_cipher = AESCipher(ENCRYPTION_KEY)
     for filename in os.listdir("./raw/"):
         with open(os.path.join('./raw/', filename), 'rb') as in_file:
+            print filename + ":",
             with open(os.path.join('./ciphertext/', filename + '.enc'), 'wb') as out_file:
                 # 处理输入文件的每一个词 str格式
                 for word in nextWord(in_file):
+                    print word,
                     my_word = word.ljust(32, '.')
                     nBits = len(my_word)
                     EWi = w_aes_cipher.encrypt(my_word)
@@ -99,6 +101,7 @@ def encryptionScheme():
                     Ti = Si + FiSi # lengh 282 
                     ciphertext = xorWord(EWi, Ti)
                     out_file.write(ciphertext)
+        print
 
 # Search word
 def searchScheme():
@@ -114,6 +117,7 @@ def searchScheme():
             s_aes_cipher = AESCipher(ENCRYPTION_KEY)
 
             cipher2search = w_aes_cipher.encrypt(word2search_padded)
+            print cipher2search
             #遍历每一个加密文件
             for filename in os.listdir('./ciphertext/'):
                 success = 0
